@@ -16,6 +16,9 @@ parameters:
         title:
             xpath: 'descriptiveMetadata[@xml:lang="{language}"]/objectIdentificationWrap/titleWrap/titleSet/appellationValue[@pref="preferred"]'
             field: 'nl-titleartwork'
+        source_inventory_number:
+            xpath: 'descriptiveMetadata[@xml:lang="{language}"]//objectIdentificationWrap/repositoryWrap/repositorySet/workID[@type="objectnummer"]'
+            field: 'sourceinvnr'
         short_description:
             xpath: 'descriptiveMetadata[@xml:lang="{language}"]/objectIdentificationWrap/objectDescriptionWrap/objectDescriptionSet/descriptiveNoteValue'
             field: 'description'
