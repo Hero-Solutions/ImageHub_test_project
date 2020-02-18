@@ -32,6 +32,28 @@ class StringUtil
         }
     }
 
+    public static function filterPhotographer($name) {
+        if($name == null) {
+            return $name;
+        }
+
+        $filters = array(
+            'Image courtesy of ',
+            'Fotograaf: ',
+            'Fotograaf:',
+            'fotograaf: ',
+            'fotograaf:',
+            'Foto: ',
+            'Foto:',
+            'foto: ',
+            'foto:'
+        );
+        foreach($filters as $filter) {
+            $name = str_replace($filter, '', $name);
+        }
+        return $name;
+    }
+
     public static function cleanObjectNumber($nr)
     {
         // Patterns, see https://github.com/PACKED-vzw/resolver/blob/master/resolver/util.py, def cleanID

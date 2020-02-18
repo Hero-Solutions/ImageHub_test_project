@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\IIIfManifest;
 use App\ResourceSpace\ResourceSpace;
+use App\Utils\StringUtil;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Log\LoggerAwareInterface;
@@ -134,6 +135,26 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                 foreach ($metadataFields as $field => $name) {
                     $imageData['metadata'][$name] = $data[$field];
                 }
+
+                $photo = StringUtil::filterPhotographer($data['copyrightnoticeofima']);
+                $photographer = StringUtil::filterPhotographer($data['credit']);
+
+                $imageData['metadata']['Copyright Notice'] = 'CC0\nAls je ons beeld gebruikt, stellen wij bronvermelding op prijs.\nCollectie ' . $data['publisher'];
+                if($photo != null && $photographer != null) {
+                    if($photo == $photographer || $photographer == null) {
+                        $imageData['metadata']['Copyright Notice'] .= ', foto: ' . $photo . '.';
+                    } else if($photo == null) {
+                        $imageData['metadata']['Copyright Notice'] .= ', fotograaf: ' . $photographer . '.';
+                    } else {
+                        $imageData['metadata']['Copyright Notice'] .= ', foto: ' . $photo . ', fotograaf: ' . $photographer . '.';
+                    }
+                } else {
+                    $imageData['metadata']['Copyright Notice'] .= '.';
+                }
+                $imageData['metadata']['Copyright Notice'] .= '\nWij ontvangen graag een exemplaar van de publicatie voor onze bibliotheek.';
+
+
+
                 $imageData['related_records'] = explode(PHP_EOL, $data['relatedrecords']);
                 if(!in_array($resourceId, $imageData['related_records'])) {
                     $imageData['related_records'][] = $resourceId;
@@ -143,6 +164,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                 $imageData['image_url'] = $this->cantaloupeUrl . $url . '.tif/full/full/0/default.jpg';
                 $imageData['service_id'] = $this->cantaloupeUrl . $url . '.tif';
                 $imageData['public_use'] = $isPublic;
+
 
                 $this->imagehubData[$resourceId] = $imageData;
             }
