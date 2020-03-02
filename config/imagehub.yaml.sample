@@ -4,10 +4,13 @@ parameters:
     resourcespace_api_username: 'admin'
     resourcespace_api_key: 'e681651ae76d8df9e41fdf4a0fd0bb3955157ab5b2064c950951fd3ccc319c4a'
 
-#    datahub_url: 'http://datahub.kmska.be'
-#    datahub_record_id_prefix: 'oai:datahub.kmska.be:kmska.be:'
-    datahub_url: 'http://datahub.iiif.vlaamsekunstcollectie.be'
-    datahub_record_id_prefix: 'oai:datahub.vlaamsekunstcollectie.be:kmska.be:'
+    datahub_url: 'http://datahub.vlaamsekunstcollectie.be'
+    datahub_username: 'datahubuser'
+    datahub_password: 'datahubpass'
+    datahub_public_id: 'datahubpublicid'
+    datahub_secret: 'datahubsecret'
+    datahub_record_id_prefix: 'oai:datahub.vlaamsekunstcollectie.be:'
+
     datahub_language: nl
     datahub_namespace: 'lido'
     datahub_metadataprefix: 'oai_lido'
