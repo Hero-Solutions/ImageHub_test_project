@@ -8,6 +8,7 @@ use DOMDocument;
 use DOMXPath;
 use Exception;
 use Phpoaipmh\Endpoint;
+use Phpoaipmh\Exception\OaipmhException;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,6 +18,7 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
 {
     private $resourceSpace;
     private $datahubUrl;
+    private $namespace;
 
     private $datahubEndpoint;
     private $resourceSpaceData;
@@ -165,6 +167,7 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
             $newData['datecreatedofartwork'] = StringUtil::getDateRange($newData['latestdate'], $newData['latestdate']);
             unset($newData['latestdate']);
         }
+        $newData['pidobject'] = $recordId;
 
         return $newData;
     }
