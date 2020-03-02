@@ -75,7 +75,7 @@ parameters:
       profile: 'http://iiif.io/api/auth/1/login'
 
     iiif_metadata_fields:
-      nl-titleartwork: 'Title'
-      sourceinvnr: 'Object ID'
-      description: 'Description'
-      publisher: 'Credit Line'
+      nl-titleartwork: 'Titel'
+      description: 'Beschrijving'
+      publisher: 'Instelling'
+      sourceinvnr: 'Inventarisnummer'
