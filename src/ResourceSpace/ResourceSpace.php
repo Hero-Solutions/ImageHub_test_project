@@ -51,7 +51,10 @@ class ResourceSpace
         foreach($resources as $resource) {
             $filename = $this->getOriginalFilenameForId($resource['ref']);
             if($filename != null) {
-                $resourceIds[$filename] = $resource['ref'];
+                if(!array_key_exists($filename, $resourceIds)) {
+                    $resourceIds[$filename] = array();
+                }
+                $resourceIds[$filename][] = $resource['ref'];
             }
         }
 

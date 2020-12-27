@@ -68,8 +68,9 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
             }
 
             $newData = $this->getDatahubData($csvLine['datahub_record_id']);
-            $this->updateResourceSpaceFields($resourceSpaceFilenames[$filename], $newData);
-
+            foreach($resourceSpaceFilenames[$filename] as $ref) {
+                $this->updateResourceSpaceFields($ref, $newData);
+            }
         }
     }
 
