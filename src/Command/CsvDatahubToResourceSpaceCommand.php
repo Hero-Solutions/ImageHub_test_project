@@ -130,10 +130,9 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
                                 if ($extr->nodeValue !== 'n/a') {
                                     if($value == null) {
                                         $value = $extr->nodeValue;
-                                    } else if($key != 'keywords') {
+                                    }
+                                    else if($key != 'keywords' || !in_array($extr->nodeValue, explode(",", $value))) {
                                         $value .= ', ' . $extr->nodeValue;
-                                    } else if(!in_array($extr->nodeValue, explode(",", $value))) {
-                                        $value .= ',' . $extr->nodeValue;
                                     }
                                 }
                             }
@@ -194,9 +193,10 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
                 $explodeRS = explode(',', $oldData[$key]);
                 $hasAll = true;
                 foreach($explodeVal as $val) {
+                    $val = trim($val);
                     $has = false;
                     foreach($explodeRS as $rs) {
-                        if($rs == $val) {
+                        if(trim($rs) == $val) {
                             $has = true;
                             break;
                         }
