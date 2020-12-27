@@ -75,7 +75,7 @@ class ResourceSpace
         $filename = null;
         foreach($data as $field) {
             if($field['name'] == 'originalfilename') {
-                $filename = StringUtil::stripExtension($field['value']);
+                $filename = $field['value'];
                 break;
             }
         }

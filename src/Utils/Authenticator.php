@@ -35,10 +35,12 @@ class Authenticator
             foreach($adfsRequirements as $requirement) {
                 if ($requirement['key'] == $key) {
                     foreach ($values as $value) {
-                        if ($requirement['value'] == $value) {
-                            $allowed = true;
-                            break;
-                        }
+                      foreach($requirement['values'] as $reqValue) {
+                          if ($value == $reqValue) {
+                              $allowed = true;
+                              break;
+                          }
+                       }
                     }
                 }
             }

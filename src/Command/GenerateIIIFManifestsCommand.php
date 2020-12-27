@@ -22,8 +22,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInterface, LoggerAwareInterface
 {
     private $verbose;
+    private $cantaloupeInternalUrl;
     private $cantaloupeUrl;
     private $publicUse;
+    private $recommendedForPublication;
     private $namespace;
     private $metadataPrefix;
 
@@ -82,6 +84,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
         $this->metadataPrefix = $this->container->getParameter('datahub_metadataprefix');
 
         $this->cantaloupeUrl = $this->container->getParameter('cantaloupe_url');
+        $this->cantaloupeInternalUrl = $this->container->getParameter('cantaloupe_internal_url');
         $this->resourceSpace = new ResourceSpace($this->container);
 
         $resourceSpaceId = $input->getArgument('rs_id');
@@ -135,6 +138,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
         $metadataFields = $this->container->getParameter('iiif_metadata_fields');
 
         $this->publicUse = $this->container->getParameter('public_use');
+        $this->recommendedForPublication = $this->container->getParameter('recommended_for_publication');
         $this->addExtraFields($resourceSpaceData, $metadataFields);
 
         $em = $this->container->get('doctrine')->getManager();
@@ -155,6 +159,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
 
             $imageData = $this->getCantaloupeData($url);
             if($imageData) {
+                $isRecommendedForPublication = $this->resourceSpace->isRecommendedForPublication($data, $this->recommendedForPublication);
                 $imageData['metadata'] = array();
                 foreach ($metadataFields as $field => $name) {
                     $imageData['metadata'][$name] = $data[$field];
@@ -174,7 +179,8 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                   }
                 }
 
-                $imageData['metadata']['Auteursrecht'] = '<a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a><br/>Als je ons beeld gebruikt, stellen wij bronvermelding op prijs.<br/>Collectie ' . $data['publisher'] . '.';
+//                $imageData['metadata']['Auteursrecht'] = '<a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a><br/>Als je ons beeld gebruikt, stellen wij bronvermelding op prijs.<br/>Collectie ' . $data['publisher'] . '.';
+                $imageData['metadata']['Auteursrecht'] .= '<br/>Collectie ' . $data['publisher'] . '.';
                 if($photo != null || $photographer != null) {
                     if($photo == $photographer || $photographer == null) {
                         $imageData['metadata']['Auteursrecht'] .= '<br/>Foto: ' . str_replace('\n', '<br/>', $photo) . '.';
@@ -184,7 +190,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                         $imageData['metadata']['Auteursrecht'] .= '<br/>Foto: ' . str_replace('\n', '<br/>', $photo) . '<br/>Fotograaf: ' . str_replace('\n', '<br/>', $photographer) . '.';
                     }
                 }
-                $imageData['metadata']['Auteursrecht'] .= '<br/>Wij ontvangen graag een exemplaar van de publicatie voor onze bibliotheek.';
+//                $imageData['metadata']['Auteursrecht'] .= '<br/>Wij ontvangen graag een exemplaar van de publicatie voor onze bibliotheek.';
 
 
 
@@ -197,6 +203,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                 $imageData['image_url'] = $this->cantaloupeUrl . $url . '.tif/full/full/0/default.jpg';
                 $imageData['service_id'] = $this->cantaloupeUrl . $url . '.tif';
                 $imageData['public_use'] = $isPublic;
+                $imageData['recommended_for_publication'] = $isRecommendedForPublication;
                 $imageData['record_id'] = $data['pidobject'];
 
                 $imageData['metadata']['Manifest'] = '<a href="' . $imageData['manifest_id'] . '">' . $imageData['manifest_id'] . '</a>';
@@ -210,7 +217,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
     private function getCantaloupeData($resourceId)
     {
         try {
-            $jsonData = file_get_contents($this->cantaloupeUrl . $resourceId . '.tif/info.json');
+            $jsonData = file_get_contents($this->cantaloupeInternalUrl . $resourceId . '.tif/info.json');
             $data = json_decode($jsonData);
             if($this->verbose) {
 //                echo 'Retrieved image ' . $resourceId . ' from Cantaloupe' . PHP_EOL;
@@ -388,7 +395,9 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                 );
 
                 // Update the LIDO data to include the manifest and thumbnail
-                $this->addManifestAndThumbnailToLido($this->namespace, $data['record_id'], $manifestId, $thumbnail);
+                if($data['public_use'] && $data['recommended_for_publication']) {
+                    $this->addManifestAndThumbnailToLido($this->namespace, $resourceId, $data['record_id'], $manifestId, $thumbnail);
+                }
             }
         }
 
@@ -567,7 +576,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
         return $valid;
     }
 
-    private function addManifestAndThumbnailToLido($namespace, $datahubRecordId, $manifestUrl, $thumbnail)
+    private function addManifestAndThumbnailToLido($namespace, $resourceId, $datahubRecordId, $manifestUrl, $thumbnail)
     {
         if (!$this->datahubEndpoint) {
             $this->datahubEndpoint = Endpoint::build($this->datahubUrl . '/oai');
@@ -577,7 +586,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
         try {
             $record = $this->datahubEndpoint->getRecord($datahubRecordId, $this->metadataPrefix);
         } catch(Exception $e) {
-            echo 'Error fetching datahub record ' . $datahubRecordId . ': ' . $e->getMessage();
+            echo 'Error fetching datahub record ' . $datahubRecordId . ' for resource ' . $resourceId . ': ' . $e->getMessage() . PHP_EOL;
         }
         if($record == null) {
             return;
@@ -604,7 +613,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
                         if($resourceSet->nodeName == $namespace . ':resourceSet') {
                             $remove = false;
                             foreach($resourceSet->childNodes as $resource) {
-                                if($resource->getAttribute($namespace . ':source') == 'Imagehub' || $resource->getAttribute($namespace . ':source') == 'ImagehubEnsor') {
+                                if($resource->getAttribute($namespace . ':source') == 'Imagehub' || $resource->getAttribute($namespace . ':source') == 'ImagehubMuzee') {
                                     $remove = true;
                                     break;
                                 }
@@ -632,7 +641,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
 
             $resourceId = $domDoc->createElement($namespace . ':resourceID');
             $resourceId->setAttribute($namespace . ':type', 'purl');
-            $resourceId->setAttribute($namespace . ':source', 'ImagehubEnsor');
+            $resourceId->setAttribute($namespace . ':source', 'ImagehubMuzee');
             $resourceId->nodeValue = $manifestUrl;
             $resourceSet->appendChild($resourceId);
 
@@ -649,7 +658,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
             $resourceSource->appendChild($legalBodyName);
             $appellationValue = $domDoc->createElement($namespace . ':appellationValue');
             // Hardcoded value
-            $appellationValue->nodeValue = 'Vlaamse Kunstcollectie VZW';
+            $appellationValue->nodeValue = 'Mu.ZEE, Kunstmuseum aan zee';
             $legalBodyName->appendChild($appellationValue);
 
             // Add thumbnail to the administrative metadata
@@ -658,7 +667,7 @@ class GenerateIIIFManifestsCommand extends Command implements ContainerAwareInte
 
             $resourceId = $domDoc->createElement($namespace . ':resourceID');
             $resourceId->setAttribute($namespace . ':type', 'purl');
-            $resourceId->setAttribute($namespace . ':source', 'ImagehubEnsor');
+            $resourceId->setAttribute($namespace . ':source', 'ImagehubMuzee');
             $resourceId->nodeValue = $thumbnail;
             $resourceSet->appendChild($resourceId);
 

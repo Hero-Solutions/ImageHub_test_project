@@ -58,10 +58,9 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
         $csvData = $this->readRecordIdsFromCsv($csvFile);
 
         $resourceSpaceFilenames = $this->resourceSpace->getAllOriginalFilenames();
-
         foreach($csvData as $csvLine) {
 
-            $filename = StringUtil::stripExtension($csvLine['filename']);
+            $filename = $csvLine['filename'];
 
             if(!array_key_exists($filename, $resourceSpaceFilenames)) {
 //                echo 'Error: could not find any resources for file ' . $filename . PHP_EOL;
@@ -70,7 +69,6 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
 
             $newData = $this->getDatahubData($csvLine['datahub_record_id']);
             $this->updateResourceSpaceFields($resourceSpaceFilenames[$filename], $newData);
-            
 
         }
     }
