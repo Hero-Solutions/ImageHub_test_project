@@ -132,7 +132,7 @@ class CsvDatahubToResourceSpaceCommand extends ContainerAwareCommand
                                         $value = $extr->nodeValue;
                                     }
                                     else if($key != 'keywords' || !in_array($extr->nodeValue, explode(",", $value))) {
-                                        $value .= ', ' . $extr->nodeValue;
+                                        $value .= ',' . $extr->nodeValue;
                                     }
                                 }
                             }
